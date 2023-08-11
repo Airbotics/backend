@@ -1,0 +1,32 @@
+{
+	"compilerOptions": {
+		"esModuleInterop": true,
+		"resolveJsonModule": true,
+		"allowSyntheticDefaultImports": true,
+		"target": "es2020",
+		"module": "commonjs",
+		"noImplicitAny": true,
+		"moduleResolution": "node",
+		"sourceMap": true,
+		"outDir": "dist",
+		"baseUrl": ".",
+		"paths": {
+			"@airbotics-core/*": ["src/core/*"],
+			"@airbotics-middleware": ["src/middleware/"],
+			"@airbotics-modules/*": ["src/modules/*"],
+			"@airbotics-types": ["src/types/"]
+		},
+		"typeRoots": [
+			"./src/types",
+			"./node_modules/@types"
+		],
+		"strictNullChecks": true
+	},
+	"include": [
+		"./src/",
+		"./tests/"
+	],
+	"ts-node": {
+		"require": ["tsconfig-paths/register"]
+	}
+}

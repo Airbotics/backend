@@ -1,0 +1,302 @@
+generator client {
+    provider                = "prisma-client-js"
+}
+
+datasource db {
+    provider                = "postgresql"
+    url                     = env("CONNECTION_STRING")
+}
+
+enum CommandState {
+    created
+    sent
+    error
+    executed
+
+  @@map("command_state")
+}
+
+enum RobotComposeFileState {
+    pending_up
+    pending_down
+    up
+    down
+    error
+
+  @@map("robot_compose_file_state")
+}
+
+enum AccountTenantRole {
+    owner
+
+  @@map("account_tenant_role")
+}
+
+enum LogLevel {
+    debug
+    info
+    warn
+    error
+    fatal
+
+  @@map("log_level")
+}
+
+
+model Session {
+    id                      String   @id
+    sid                     String   @unique
+    data                    String
+    expiresAt               DateTime
+
+    @@map("sessions")
+}
+
+
+model Tenant {
+    uuid                    String          @id @default(uuid()) @unique
+    name                    String
+    created_at              DateTime        @default(now())
+
+    accounts                AccountTenant[]
+    robots                  Robot[]
+    api_keys                ApiKey[]
+    commands                Command[]
+    compose_files           ComposeFile[]
+    robot_compose_files     RobotComposeFile[]
+    logs                    Log[]
+    data_points             DataPoint[]
+    streams                 Stream[]
+    vitals                  Vital[]
+    
+    @@map("tenants")
+}
+
+
+model Account {
+    uuid                    String          @id @default(uuid()) @unique
+    first_name              String
+    last_name               String
+    email                   String          @unique
+    password                String
+    created_at              DateTime        @default(now())
+    
+    tenants                 AccountTenant[]
+
+    @@map("accounts")
+}
+
+
+model AccountTenant {
+    account_uuid            String
+    tenant_uuid             String
+    role                    AccountTenantRole
+    
+    account                 Account         @relation(fields: [account_uuid], references: [uuid], onDelete: Cascade)
+    tenant                  Tenant          @relation(fields: [tenant_uuid], references: [uuid], onDelete: Cascade)
+
+    @@id([account_uuid, tenant_uuid])
+    @@map("account_tenants")
+}
+
+
+
+model ApiKey {
+    uuid                    String          @id @default(uuid()) @unique
+    name                    String
+    hint                    String
+    value                   String          @unique
+    created_at              DateTime        @default(now())
+    permissions             String[]        @default([])
+
+    tenant_uuid             String
+    
+    tenant                  Tenant          @relation(fields: [tenant_uuid], references: [uuid], onDelete: Cascade)  
+
+    @@map("api_keys")
+}
+
+
+
+model Robot {
+    uuid                    String          @id @default(uuid()) @unique
+    id                      String
+    name                    String
+    provisioned             Boolean         @default(false)
+    token_hint              String
+    token_value             String
+    online_updated_at       DateTime?                                           // the last reported time the agent was seen
+    online                  Boolean?                    // whether the agent has an active mqtt connection
+    agent_version           String?                                             // the most recently reported version of the agent
+    created_at              DateTime        @default(now())
+
+    logs_enabled            Boolean         @default(false)
+    logs_first_recording    DateTime?
+    logs_last_recording     DateTime?
+    logs_num_recordings     Int             @default(0)
+
+    tenant_uuid             String
+    tenant                  Tenant          @relation(fields: [tenant_uuid], references: [uuid], onDelete: Cascade)
+
+    commands                Command[] 
+    compose_files           RobotComposeFile[]
+    logs                    Log[]
+    data_points             DataPoint[]
+    streams                 Stream[]
+    vitals                  Vital[] 
+
+    @@unique([id, tenant_uuid])
+    @@map("robots")
+}
+
+
+model Vital {
+    uuid                    String          @id @default(uuid()) @unique
+
+    cpu                     Float           @default(0.0)
+    ram                     Float           @default(0.0)
+    disk                    Float           @default(0.0)
+    battery                 Float           @default(0.0)
+
+    robot_uuid              String
+    robot                   Robot           @relation(fields: [robot_uuid], references: [uuid], onDelete: Cascade)
+
+    tenant_uuid             String
+    tenant                  Tenant          @relation(fields: [tenant_uuid], references: [uuid], onDelete: Cascade) 
+
+    created_at              DateTime        @default(now())
+
+    @@map("vitals")
+}
+
+
+
+model Command {
+    uuid                    String          @id @default(uuid()) @unique
+
+    interface               String
+    name                    String
+    type                    String    
+    payload                 Json
+
+    state                   CommandState    @default(created)
+    error_code              String?
+
+    tenant_uuid             String
+    tenant                  Tenant            @relation(fields: [tenant_uuid], references: [uuid], onDelete: Cascade) 
+
+    robot_uuid              String
+    robot                   Robot           @relation(fields: [robot_uuid], references: [uuid], onDelete: Cascade)  
+    
+    created_at              DateTime        @default(now())
+
+    @@map("commands")
+}
+
+
+
+model ComposeFile {
+    uuid                    String          @id @default(uuid()) @unique
+    id                      String
+    name                    String
+    content                 Json
+
+    tenant_uuid             String
+    tenant                  Tenant            @relation(fields: [tenant_uuid], references: [uuid], onDelete: Cascade) 
+
+    created_at              DateTime        @default(now())
+
+    robots                  RobotComposeFile[]
+
+    @@unique([id, tenant_uuid])
+    @@map("compose_files")
+}
+
+
+
+model RobotComposeFile {
+    tenant_uuid             String
+    tenant                  Tenant            @relation(fields: [tenant_uuid], references: [uuid], onDelete: Cascade) 
+
+    robot_uuid              String
+    robot                   Robot           @relation(fields: [robot_uuid], references: [uuid], onDelete: Cascade)  
+
+    compose_file_uuid       String
+    compose_file            ComposeFile           @relation(fields: [compose_file_uuid], references: [uuid], onDelete: Cascade)  
+    
+    state                   RobotComposeFileState
+    error_code              String?
+    
+    created_at              DateTime        @default(now())
+
+    @@id([tenant_uuid, robot_uuid])
+    @@map("robot_compose_files")
+}
+
+
+// hypertable
+model Log {
+    uuid                    String          @id @default(uuid()) @unique
+
+    stamp                   DateTime
+    level                   LogLevel
+    name                    String
+    file                    String    
+    function                String
+    line                    Int
+    msg                     String
+
+    tenant_uuid             String
+    tenant                  Tenant            @relation(fields: [tenant_uuid], references: [uuid], onDelete: Cascade) 
+
+    robot_uuid              String
+    robot                   Robot           @relation(fields: [robot_uuid], references: [uuid], onDelete: Cascade)  
+    
+
+    @@map("logs")
+}
+
+model Stream {
+    uuid                    String          @id @default(uuid()) @unique
+
+    source                  String
+    type                    String
+    hz                      Float
+    first_recording         DateTime?
+    last_recording          DateTime?
+    num_recordings         Int             @default(0)
+    enabled                 Boolean         @default(false)
+
+    created_at              DateTime        @default(now())
+
+    tenant_uuid             String
+    tenant                  Tenant          @relation(fields: [tenant_uuid], references: [uuid], onDelete: Cascade) 
+
+    robot_uuid              String
+    robot                   Robot           @relation(fields: [robot_uuid], references: [uuid], onDelete: Cascade)
+
+    data_points             DataPoint[]
+
+    @@unique([robot_uuid, source])
+    @@map("streams")
+}
+
+
+// hypertable
+model DataPoint {
+    uuid                    String          @id @default(uuid()) @unique
+    
+    payload                 Json            // payload of data
+    sent_at                 DateTime        // rfc3339 from robot
+
+    stream_uuid             String
+    stream                  Stream            @relation(fields: [stream_uuid], references: [uuid], onDelete: Cascade)  
+
+    tenant_uuid             String
+    tenant                  Tenant            @relation(fields: [tenant_uuid], references: [uuid], onDelete: Cascade)  
+
+    robot_uuid              String
+    robot                   Robot            @relation(fields: [robot_uuid], references: [uuid], onDelete: Cascade)  
+    
+    @@map("datapoints")
+}

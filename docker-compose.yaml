@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+    timescale:
+        image: timescale/timescaledb-ha:pg14-latest
+        container_name: timescale
+        environment:
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: db
+        ports:
+            - 5432:5432
+    mqtt:
+        image: emqx/emqx:latest
+        container_name: emqx
+        environment:
+            - EMQX_ALLOW_ANONYMOUS=false
+            - EMQX_NAME=emqx
+            - EMQX_HOST=127.0.0.1
+            - EMQX_LISTENER__TCP__EXTERNAL=1883
+            - EMQX_LOADED_PLUGINS="emqx_management,emqx_auth_mnesia,emqx_dashboard"
+            - EMQX_DASHBOARD__DEFAULT_PASSWORD="pass"
+        ports:
+            - 1883:1883
+            - 8081:8081
+            - 18083:18083

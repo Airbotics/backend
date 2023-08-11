@@ -1,0 +1,344 @@
+
+@BASE_URL=http://localhost:8000
+
+@API_KEY={{$dotenv %AIR_API_KEY}}
+
+@ROBOT_ID={{$dotenv %AIR_ROBOT_ID}}
+
+
+
+
+### 
+### Robots 
+### 
+
+### create a robot
+POST {{BASE_URL}}/robots HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+{
+    "id": "test_bo_two"
+}
+
+### list all robots
+
+GET {{BASE_URL}}/robots HTTP/1.1
+air-api-key: {{API_KEY}}
+
+
+### list details about a robot
+GET {{BASE_URL}}/robots/{{ROBOT_ID}} HTTP/1.1
+air-api-key: {{API_KEY}}
+
+### delete a robots
+DELETE {{BASE_URL}}/robots/{{ROBOT_ID}} HTTP/1.1
+air-api-key: {{API_KEY}}
+
+
+
+
+### 
+### API keys
+### 
+
+### create an api key
+POST {{BASE_URL}}/api-keys HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "Test api key"
+}
+
+### list all api keys
+GET {{BASE_URL}}/api-keys HTTP/1.1
+
+### delete an api key
+DELETE {{BASE_URL}}/api-keys/23b60ae3-7e3d-4a1d-a26c-9f6faf8facb8 HTTP/1.1
+
+
+
+
+
+
+### 
+### Compose files 
+### 
+
+### create a compose file
+POST {{BASE_URL}}/compose-files HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+{
+    "id": "robotapp-v1",
+    "name": "Version 1 of robot application",
+    "content": {
+        "services": {
+        "mqtt": {
+        "container_name": "emqx",
+        "environment": {
+        "EMQX_ALLOW_ANONYMOUS": "false",
+        "EMQX_DASHBOARD__DEFAULT_PASSWORD": "\"pass\"",
+        "EMQX_HOST": "127.0.0.1",
+        "EMQX_LISTENER__TCP__EXTERNAL": "1883",
+        "EMQX_LOADED_PLUGINS": "\"emqx_management,emqx_auth_mnesia,emqx_dashboard\"",
+        "EMQX_NAME": "emqx"
+        },
+        "image": "emqx/emqx:latest",
+        "networks": {
+        "default": null
+        },
+        "ports": [
+        {
+        "mode": "ingress",
+        "target": 1883,
+        "published": 1883,
+        "protocol": "tcp"
+        },
+        {
+        "mode": "ingress",
+        "target": 8081,
+        "published": 8081,
+        "protocol": "tcp"
+        },
+        {
+        "mode": "ingress",
+        "target": 18083,
+        "published": 18083,
+        "protocol": "tcp"
+        }
+        ]
+        },
+        "timescale": {
+        "container_name": "timescale",
+        "environment": {
+        "POSTGRES_DB": "db",
+        "POSTGRES_PASSWORD": "password",
+        "POSTGRES_USER": "user"
+        },
+        "image": "timescale/timescaledb-ha:pg14-latest",
+        "networks": {
+        "default": null
+        },
+        "ports": [
+        {
+        "mode": "ingress",
+        "target": 5432,
+        "published": 5432,
+        "protocol": "tcp"
+        }
+        ]
+        }
+        },
+        "networks": {
+        "default": {
+        "name": "scratch_default",
+        "ipam": {},
+        "external": false
+        }
+        }
+    }
+}
+
+
+### list compose files
+# @name composeResponse
+GET {{BASE_URL}}/compose-files/ HTTP/1.1
+air-api-key: {{API_KEY}}
+
+@COMPOSE_ID = {{composeResponse.response.body.$[0].id}}
+
+### get a compose file
+GET {{BASE_URL}}/compose-files/{{COMPOSE_ID}} HTTP/1.1
+air-api-key: {{API_KEY}}
+
+### delete a compose file
+DELETE {{BASE_URL}}/compose-files/{{COMPOSE_ID}} HTTP/1.1
+air-api-key: {{API_KEY}}
+
+### put compose file on a robot
+POST {{BASE_URL}}/robots/{{ROBOT_ID}}/compose-file HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+{
+    "id": "{{COMPOSE_ID}}"
+}
+
+### get compose file currently on a robot
+GET {{BASE_URL}}/robots/{{ROBOT_ID}}/compose-file HTTP/1.1
+air-api-key: {{API_KEY}}
+
+### delete compose file currently on a robot
+DELETE {{BASE_URL}}/robots/{{ROBOT_ID}}/compose-file HTTP/1.1
+air-api-key: {{API_KEY}}
+
+
+
+
+### 
+### Commands 
+### 
+
+### send a command [topic]
+POST {{BASE_URL}}/robots/{{ROBOT_ID}}/commands HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+{
+    "interface": "topic",
+    "name": "/bcr_bot/cmd_vel",
+    "type": "geometry_msgs/msg/Twist",
+    "payload": {
+      "linear": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+      },
+      "angular": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+      }
+    }
+}
+
+### send a command [service]
+POST {{BASE_URL}}/robots/{{ROBOT_ID}}/commands HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+{
+    "interface": "service",
+    "name": "/turtle1/teleport_absolute",
+    "type": "turtlesim/srv/TeleportAbsolute",
+    "payload": {
+        "x": 10.0,
+        "y": 5.0,
+        "theta": 1.57
+    }    
+}
+
+### list all commands
+GET {{BASE_URL}}/commands?limit=10&offset=0 HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+### list all commands sent to a robot
+GET {{BASE_URL}}/robots/{{ROBOT_ID}}/commands?limit=10&offset=0 HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+
+
+
+### 
+### Logs
+### 
+
+### list all logs
+GET {{BASE_URL}}/robots/{{ROBOT_ID}}/logs?offset=0&limit=10 HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+### delete all logs
+DELETE {{BASE_URL}}/robots/{{ROBOT_ID}}/logs HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+### get log config
+GET {{BASE_URL}}/robots/{{ROBOT_ID}}/logs/config HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+### set log config
+PATCH {{BASE_URL}}/robots/{{ROBOT_ID}}/logs/config HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+{
+    "enabled": true
+}
+
+### 
+### Vitals
+### 
+
+### get most recent robot vitals
+GET {{BASE_URL}}/robots/{{ROBOT_ID}}/vitals?latest_only=true HTTP/1.1
+air-api-key: {{API_KEY}}
+
+
+### get 5-10 most recent robot vitals
+GET {{BASE_URL}}/robots/{{ROBOT_ID}}/vitals?offset=5&limit=5 HTTP/1.1
+air-api-key: {{API_KEY}}
+
+
+### delete all robots vitals
+DELETE {{BASE_URL}}/robots/{{ROBOT_ID}}/vitals HTTP/1.1
+air-api-key: {{API_KEY}}
+
+
+
+### 
+### data 
+### 
+
+
+### Create a data stream for a robot
+POST {{BASE_URL}}/robots/{{ROBOT_ID}}/streams HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+{
+    "source": "/turtle2/cmd_vel",
+    "type": "geometry_msgs/msg/Twist",
+    "hz": 1
+}
+
+### list all data streams for robot
+# @name streamResponse
+GET {{BASE_URL}}/robots/{{ROBOT_ID}}/streams HTTP/1.1
+air-api-key: {{API_KEY}}
+
+@STREAM = {{streamResponse.response.body.$[0].source_encoded}}
+
+### Update a data stream for a robot
+PATCH  {{BASE_URL}}/robots/{{ROBOT_ID}}/streams/{{STREAM}} HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+{
+    "hz": 5,
+    "enabled": true
+}
+
+
+### delete a data stream (and data points) for a robot
+DELETE  {{BASE_URL}}/robots/{{ROBOT_ID}}/streams/{{STREAM}} HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+
+### get data from a robot
+GET {{BASE_URL}}/robots/{{ROBOT_ID}}/data?source={{STREAM}} HTTP/1.1
+air-api-key: {{API_KEY}}
+
+
+### get latest 10 data points
+GET {{BASE_URL}}/robots/{{ROBOT_ID}}/data?source={{STREAM}}&limit=10 HTTP/1.1
+air-api-key: {{API_KEY}}
+
+### get data after a date
+GET {{BASE_URL}}/robots/{{ROBOT_ID}}/data?source={{STREAM}}&from=2023-08-01T12:00:00 HTTP/1.1
+air-api-key: {{API_KEY}}
+
+### get data before a date
+GET {{BASE_URL}}/robots/{{ROBOT_ID}}/data?source={{STREAM}}&to=2023-08-01T12:00:00 HTTP/1.1
+air-api-key: {{API_KEY}}
+
+### get data between two dates
+GET {{BASE_URL}}/robots/{{ROBOT_ID}}/data?source={{STREAM}}&from=2023-08-01T12:00:00&to=2023-08-01T13:00:00 HTTP/1.1
+air-api-key: {{API_KEY}}
+
