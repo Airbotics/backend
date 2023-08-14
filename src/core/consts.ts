@@ -41,7 +41,8 @@ export enum CloudToRobotTopics {
     CommandsSend = 'commands/send',
     ContainersConfig = 'containers/config',
     LogsConfig = 'logs/config',
-    DataConfig = 'data/config'
+    DataConfig = 'data/config',
+    VitalsConfig = 'vitals/config',
 }
 
 

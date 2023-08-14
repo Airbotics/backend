@@ -126,7 +126,7 @@ model Robot {
     token_hint              String
     token_value             String
     online_updated_at       DateTime?                                           // the last reported time the agent was seen
-    online                  Boolean?                    // whether the agent has an active mqtt connection
+    online                  Boolean?                                            // whether the agent has an active mqtt connection
     agent_version           String?                                             // the most recently reported version of the agent
     created_at              DateTime        @default(now())
 
@@ -134,6 +134,8 @@ model Robot {
     logs_first_recording    DateTime?
     logs_last_recording     DateTime?
     logs_num_recordings     Int             @default(0)
+
+    vitals_enabled          Boolean         @default(true)
 
     tenant_uuid             String
     tenant                  Tenant          @relation(fields: [tenant_uuid], references: [uuid], onDelete: Cascade)

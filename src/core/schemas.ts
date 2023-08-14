@@ -69,6 +69,12 @@ export const createRobot = Joi.object({
     name: nameField.allow('').optional()
 });
 
+
+export const configureVitals = Joi.object({
+    enabled: Joi.boolean().required()
+});
+
+
 export const configureLogs = Joi.object({
     enabled: Joi.boolean().required()
 });

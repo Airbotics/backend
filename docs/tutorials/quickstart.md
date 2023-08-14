@@ -56,16 +56,20 @@ api_key=$(curl --header "Content-Type: application/json" \
   --request POST \
   --data '{
     "name": "quickstart-key",
-    "permissions": ["commands_write",
-"commands_read",
-"compose_files_write",
-"compose_files_read",
-"robots_compose_files_write",
-"robots_compose_files_read",
-"robots_write",
-"robots_read",
-"logs_write",
-"logs_read"]
+    "permissions": [
+      "commands:write",
+      "commands:read",
+      "compose_files:write",
+      "compose_files:read",
+      "robots_compose_files:write",
+      "robots_compose_files:read",
+      "robots:write",
+      "robots:read",
+      "logs:write",
+      "logs:read",
+      "data:read",
+      "data:write"
+    ]
   }' \
   http://localhost:8000/api-keys | jq -r ".api_key")
 
