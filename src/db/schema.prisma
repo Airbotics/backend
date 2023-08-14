@@ -135,7 +135,7 @@ model Robot {
     logs_last_recording     DateTime?
     logs_num_recordings     Int             @default(0)
 
-    vitals_enabled          Boolean         @default(true)
+    vitals_enabled          Boolean         @default(false)
 
     tenant_uuid             String
     tenant                  Tenant          @relation(fields: [tenant_uuid], references: [uuid], onDelete: Cascade)
