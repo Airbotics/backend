@@ -48,7 +48,7 @@ curl -s -X 'POST' \
   }" \
 "http://localhost:18083/api/v5/authentication/$authenticator_id/users"
 
-echo "MQTT_USERNAME = \"${mqtt_user}\"" >> .env
+echo "\nMQTT_USERNAME = \"${mqtt_user}\"" >> .env
 echo "MQTT_PASSWORD = \"${mqtt_pwd}\"" >> .env
 
 echo "Created user for the airbotics backend..."
