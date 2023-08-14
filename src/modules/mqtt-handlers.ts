@@ -79,6 +79,14 @@ export const handlePresence = async (message: IMqttMessage) => {
             }))
         );
         client.publish(dataTopic, dataPayload, { qos: 0 });
+
+        // send init vitals collection message
+        const vitalsTopic = formatMqttTopic(message.tenant_uuid, message.robot.id, CloudToRobotTopics.VitalsConfig);
+        const vitalsPayload = JSON.stringify({
+            enabled: robot.vitals_enabled
+        });
+        client.publish(vitalsTopic, vitalsPayload, { qos: 0 });
+        
     }
 
 }
