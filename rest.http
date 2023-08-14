@@ -7,6 +7,22 @@
 
 
 
+### 
+### Account 
+### 
+
+### create an account
+POST {{BASE_URL}}/register HTTP/1.1
+Content-Type: application/json
+
+{
+    "email": "jeff@acme.com",
+    "password": "P@ssw0rd",
+    "first_name": "Jeff",
+    "last_name": "Smith"
+}
+
+
 
 ### 
 ### Robots 
@@ -18,7 +34,7 @@ Content-Type: application/json
 air-api-key: {{API_KEY}}
 
 {
-    "id": "test_bo_two"
+    "id": "{{ROBOT_ID}}"
 }
 
 ### list all robots
@@ -278,6 +294,21 @@ air-api-key: {{API_KEY}}
 ### delete all robots vitals
 DELETE {{BASE_URL}}/robots/{{ROBOT_ID}}/vitals HTTP/1.1
 air-api-key: {{API_KEY}}
+
+
+### get vitals config
+GET {{BASE_URL}}/robots/{{ROBOT_ID}}/vitals/config HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+### set vitals config
+PATCH {{BASE_URL}}/robots/{{ROBOT_ID}}/vitals/config HTTP/1.1
+Content-Type: application/json
+air-api-key: {{API_KEY}}
+
+{
+    "enabled": false
+}
 
 
 
